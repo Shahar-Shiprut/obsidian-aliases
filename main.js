@@ -207,29 +207,5 @@ class CommandAliasesSettingTab extends PluginSettingTab {
                         }
                     });
             });
-
-        containerEl.createEl("h3", {
-            text: "Available command IDs"
-        });
-
-        const list = containerEl.createEl("div");
-
-        const commands = Object.values(
-            this.app.commands.commands
-        ).sort((a, b) =>
-            a.id.localeCompare(b.id)
-        );
-
-        for (const cmd of commands) {
-            const row = list.createEl("div");
-
-            row.style.marginBottom = "6px";
-
-            row.createEl("code", {
-                text: cmd.id
-            });
-
-            row.appendText(" — " + cmd.name);
-        }
     }
 }
