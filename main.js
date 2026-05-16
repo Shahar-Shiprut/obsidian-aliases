@@ -104,62 +104,72 @@ class CommandAliasesSettingTab extends PluginSettingTab {
             text: "Command Aliases"
         });
 
-        this.plugin.settings.aliases.forEach((entry, index) => {
-            new Setting(containerEl)
-                .setName(`Alias ${index + 1}`)
-                .addSearch(search => {
-                    const commands = this.plugin.app.commands.commands;
-                    const commandEntries = Object.entries(commands).map(([id, cmd]) => ({
-                        id,
-                        name: cmd.name
-                    }));
-                    
-                    search
-                        .setPlaceholder("Search commands...")
-                        .setValue(entry.commandId)
-                        .setSearchFn((query, cb) => {
-                            const results = commandEntries.filter(cmd =>
-                                cmd.name.toLowerCase().includes(query.toLowerCase()) ||
-                                cmd.id.toLowerCase().includes(query.toLowerCase())
-                            );
-                            cb(results.map(cmd => ({ value: cmd.id, display: cmd.name })));
-                        })
-                        .onChange(value => {
-                            this.plugin.settings.aliases[index].commandId = value;
-                            this.plugin.saveSettings();
-                        });
-                })
-                .addText(text => text
-                    .setPlaceholder("Enter alias")
-                    .setValue(entry.alias)
-                    .onChange(value => {
-                        this.plugin.settings.aliases[index].alias = value;
-                        this.plugin.saveSettings();
-                    })
-                )
-                .addButton(button => button
-                    .setIcon("trash")
-                    .setWarning()
-                    .onClick(() => {
-                        this.plugin.settings.aliases.splice(index, 1);
-                        this.plugin.saveSettings();
-                        this.display();
-                    })
-                );
-        });
-
         new Setting(containerEl)
-            .addButton(button => button
-                .setButtonText("Add Alias")
-                .setCta()
-                .onClick(() => {
+            .setName("Add new alias")
+            .setDesc("Create an alias for any command")
+            .addButton(button => {
+                button.setButtonText("Add").onClick(() => {
                     this.plugin.settings.aliases.push({
                         commandId: "",
                         alias: ""
                     });
                     this.plugin.saveSettings();
                     this.display();
+                });
+            });
+
+        this.plugin.settings.aliases.forEach((entry, index) => {
+            new Setting(containerEl)
+                .addSearch(search => {
+                    const commandManager = this.app.commands;
+                    const commands = Object.values(commandManager.commands);
+                    
+                    search.setPlaceholder("Search commands...")
+                        .setValue(entry.commandId)
+                        .onChange(value => {
+                            entry.commandId = value;
+                            this.plugin.saveSettings();
+                        });
+                    
+                    search.containerEl.classList.add("command-search");
+                    const resultsEl = containerEl.createDiv("command-search-results");
+                    
+                    search.inputEl.addEventListener("input", (e) => {
+                        const query = e.target.value.toLowerCase();
+                        resultsEl.empty();
+                        
+                        if (!query) return;
+                        
+                        commands
+                            .filter(cmd => cmd.name.toLowerCase().includes(query))
+                            .slice(0, 10)
+                            .forEach(cmd => {
+                                const div = resultsEl.createDiv("command-result");
+                                div.setText(cmd.name);
+                                div.addEventListener("click", () => {
+                                    entry.commandId = cmd.id;
+                                    search.setValue(cmd.id);
+                                    resultsEl.empty();
+                                    this.plugin.saveSettings();
+                                });
+                            });
+                    });
                 })
-            );
+                .addText(text => {
+                    text.setPlaceholder("Alias name")
+                        .setValue(entry.alias)
+                        .onChange(value => {
+                            entry.alias = value;
+                            this.plugin.saveSettings();
+                        });
+                })
+                .addButton(button => {
+                    button.setButtonText("Remove").onClick(() => {
+                        this.plugin.settings.aliases.splice(index, 1);
+                        this.plugin.saveSettings();
+                        this.display();
+                    });
+                });
+        });
     }
 }
