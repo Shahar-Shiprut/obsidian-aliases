@@ -107,14 +107,18 @@ class CommandAliasesSettingTab extends PluginSettingTab {
         this.plugin.settings.aliases.forEach((entry, index) => {
             new Setting(containerEl)
                 .setName(`Alias ${index + 1}`)
-                .addSearch(search => search
-                    .setPlaceholder("Select command")
-                    .setValue(entry.commandId)
-                    .onChange(value => {
-                        this.plugin.settings.aliases[index].commandId = value;
-                        this.plugin.saveSettings();
-                    })
-                )
+                .addDropdown(dropdown => {
+                    const commands = this.plugin.app.commands.commands;
+                    Object.keys(commands).forEach(commandId => {
+                        dropdown.addOption(commandId, commands[commandId].name);
+                    });
+                    dropdown
+                        .setValue(entry.commandId)
+                        .onChange(value => {
+                            this.plugin.settings.aliases[index].commandId = value;
+                            this.plugin.saveSettings();
+                        });
+                })
                 .addText(text => text
                     .setPlaceholder("Enter alias")
                     .setValue(entry.alias)
@@ -124,7 +128,7 @@ class CommandAliasesSettingTab extends PluginSettingTab {
                     })
                 )
                 .addButton(button => button
-                    .setButtonText("Delete")
+                    .setIcon("trash")
                     .setWarning()
                     .onClick(() => {
                         this.plugin.settings.aliases.splice(index, 1);
