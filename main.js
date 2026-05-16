@@ -107,13 +107,23 @@ class CommandAliasesSettingTab extends PluginSettingTab {
         this.plugin.settings.aliases.forEach((entry, index) => {
             new Setting(containerEl)
                 .setName(`Alias ${index + 1}`)
-                .addDropdown(dropdown => {
+                .addSearch(search => {
                     const commands = this.plugin.app.commands.commands;
-                    Object.keys(commands).forEach(commandId => {
-                        dropdown.addOption(commandId, commands[commandId].name);
-                    });
-                    dropdown
+                    const commandEntries = Object.entries(commands).map(([id, cmd]) => ({
+                        id,
+                        name: cmd.name
+                    }));
+                    
+                    search
+                        .setPlaceholder("Search commands...")
                         .setValue(entry.commandId)
+                        .setSearchFn((query, cb) => {
+                            const results = commandEntries.filter(cmd =>
+                                cmd.name.toLowerCase().includes(query.toLowerCase()) ||
+                                cmd.id.toLowerCase().includes(query.toLowerCase())
+                            );
+                            cb(results.map(cmd => ({ value: cmd.id, display: cmd.name })));
+                        })
                         .onChange(value => {
                             this.plugin.settings.aliases[index].commandId = value;
                             this.plugin.saveSettings();
