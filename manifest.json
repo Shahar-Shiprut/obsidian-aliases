@@ -1,0 +1,10 @@
+{
+  "id": "command-aliases",
+  "name": "Command Aliases",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "Adds aliases for existing commands to the command palette.",
+  "author": "Your Name",
+  "authorUrl": "https://example.com",
+  "isDesktopOnly": false
+}
